@@ -5,3 +5,8 @@
   microsystem troubleshooters.
 
   Please report any issues with the GitHub issue tracker.
+
+** Other projects of interest
+
+   - [[https://github.com/ieure/fcw][Fluke Compiler Wrapper]]
+   - [[https://github.com/ieure/tl1-mode][TL/1 Mode]]
