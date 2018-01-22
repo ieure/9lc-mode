@@ -1,8 +1,9 @@
-;;; flub-mode.el --- Major mode for editing Fluke 9000 source
+;;; 9lc-mode.el --- Major mode for editing Fluke 9000 source
 
-;; Copyright (C) 2014, 2015, 2016  Ian Eure
+;; Copyright (C) 2014, 2015, 2016, 2018  Ian Eure
 
 ;; Author: Ian Eure <ian.eure@gmail.com>
+;; Version: 0.6
 ;; Keywords: extensions, languages
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -20,104 +21,178 @@
 
 ;;; Commentary:
 
-;;
+;; This is a major mode for editing Fluke 9000 scripts.
+
+;;; History:
+
+;;  2014-2017
+;;   Initial versions.
+
+;; 2018-01-21
+;;   Renamed to 9lc-mode (from flub-mode).
+;;   Rewrote to be based on prog-mode instead of asm-mode.
+;;   Implemented correct indentation behavior.
+;;   Improved font-lock behavior.
 
 ;;; Code:
 
-(defconst flub-mode-font-lock-keywords
+(defun 9lc-mode-word-opt* (&rest words)
+  (concat "\\b" (regexp-opt words) "\\b"))
+
+(defconst 9lc-keywords
+  (9lc-mode-word-opt*
+   "active"
+   "address"
+   "and"
+   "assign"
+   "atog"
+   "auto\\(?:\\s-+ test\\)?"
+   "aux"
+   "bad"
+   "beep"
+   "binary"
+   "bit"
+   "bits"
+   "bts"
+   "bus\\(?:\\s-+ test\\)?"
+   "bytes"
+   "control"
+   "cpl"
+   "ctl"
+   "data" 11223344
+   "dec"
+   "declarations"
+   "dpy"
+   "dtog"
+   "enable"
+   "err"
+   "error"
+   "errors"
+   "ex"
+   "exercise\\s-+errors"
+   "execute"
+   "force"
+   "free"
+   "goto"
+   "if"
+   "illegal"
+   "inc"
+   "include"
+   "information"
+   "interrupt"
+   "io\\(?:\\s-+ test\\)?"
+   "label"
+   "learn"
+   "line"
+   "linesize"
+   "long"
+   "loop"
+   "newline"
+   "on"
+   "or"
+   "por"
+   "power"
+   "probe"
+   "program"
+   "ram short"
+   "ram long"
+   "ramp"
+   "rd"
+   "read"
+   "reg"
+   "rept"
+   "rom"
+   "rom test"
+   "run uut"
+   "setup"
+   "shl"
+   "short"
+   "shr"
+   "sig"
+   "space"
+   "stall"
+   "stop"
+   "sts"
+   "supply"
+   "sync"
+   "timeout"
+   "to"
+   "transition"
+   "trap"
+   "unstall"
+   "walk"
+   "wr"
+   "write"))
+
+(defconst 9lc-mode-font-lock-keywords
   `(
-    ("\\b\\(REG\\)\\s-*\\([A-F0-9]\\)\\b"
-     (1 font-lock-builtin-face)
-     (2 font-lock-variable-name-face))
+    ("\\bREG\\s-*[A-F0-9]\\b" . font-lock-variable-name-face)
 
-    (,(format "\\b%s\\b"
-              (regexp-opt '("INC" "IF" "DEC" "SIG" "RUN UUT" "SETUP"
-                            "RAM"  "ROM" "IO" "TRAP" "POD"
-                            "READ" "RD" "WRITE" "STS"
-                            "BUS TEST" "ADDRESS SPACE INFORMATION")))
+    ("\\b\\(yes\\|no\\)\\b" . font-lock-constant-face)
+    ("@" . font-lock-constant-face)
 
-     . font-lock-builtin-face)
-
-    ("STOP" . font-lock-warning-face)
-
-    ("\\b\\(YES\\|NO\\)\\b" . font-lock-constant-face)
-
-    (,(format "\\b%s\\b"
-              (regexp-opt '("ACTIVE FORCE LINE"
-                            "ADDRESS ERROR"
-                            "BAD POWER SUPPLY"
-                            "CONTROL ERROR"
-                            "DATA ERROR")))
-     . font-lock-keyword-face)
-
-    ("\\bINCLUDE\\b" . font-lock-preprocessor-face)
-
-    ("\\b\\(\\(DPY\\|AUX\\)\\s-*-?\\)\\(.\\{0,27\\}\\)"
-     (2 font-lock-builtin-face t)
-     (3 font-lock-string-face t))
+    ("\\binclude\\b" . font-lock-preprocessor-face)
 
     ;; Labels
     ("^\\s-*\\([A-Z0-9]+\\):" . font-lock-function-name-face)
 
-    ("\\(PROGRAM\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
+    ("\\bprogram\\s-+\\([0-9A-Z]+\\)"
+     (1 font-lock-function-name-face))
 
-    ("\\(EX\\|EXECUTE\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
+    ("\\(?:ex\\|execute\\)\\s-+\\([0-9A-Z]+\\)"
+     (1 font-lock-function-name-face))
 
-    ("\\(GOTO\\)\s+\\([0-9A-Z]+\\)" (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
+    ("\\(?:goto\\)\\s-+\\([0-9A-Z]+\\)"
+     (1 font-lock-function-name-face))
 
-    ("\\b[0-9A-F]+\\b" . font-lock-constant-face)
+    ("\\bdpy[- ]\\([a-z0-9 _=@#;<>%\"\.\$\?\\\\+-]+\\)"
+     (1 font-lock-string-face))
 
-    ("@" . font-lock-constant-face)
-
-    ("\\(!+\\)\\(.*\\)" (1 font-lock-comment-delimiter-face)
-     (2 font-lock-comment-face t))
+    (,9lc-keywords
+     . font-lock-keyword-face)
     ))
 
-(defun flub-last-indentation ()
-  "Return the indentation of the last nonblank line."
-  (save-excursion
-    (goto-char (line-beginning-position))
-    (while (looking-at "^\\s-*$")
-      (next-line -1))
-    (current-indentation)))
+(defvar 9lc-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    ;; A `!' is the start of a comment
+    (modify-syntax-entry ?! "<" table)
+    ;; The comment extends to the end of the line the `!' appears on.
+    (modify-syntax-entry ?\n ">" table)
+    table))
 
-(defun flub-indent-line ()
-  "Auto-indent the current line."
+;; Indentation rules:
+;;
+;; INCLUDE, SETUP, PROGRAM, and labels are all aligned to 0.
+;; All other statements are indented one level.
+
+(defun 9lc-mode-indent ()
+  "Indent the current line"
   (interactive)
+  (indent-line-to
+   (save-excursion
+     (goto-char (line-beginning-position))
+     (if (looking-at "^\\s-*\\(program\\|setup\\|declarations\\|address space information\\|include\\|[a-z0-9]+:\\|!\\)")
+         0
+       tab-width))))
 
-  (save-match-data
-    (save-excursion
-      (back-to-indentation)
-      (indent-line-to
-       (cond ((or (bobp)
-                  (looking-at "\\(SETUP\\|PROGRAM\\|[0-9A-Z]+:\\)")) 0)
-             ((looking-at "\\(!\\|INCLUDE\\)")
-              (flub-last-indentation))
-             (t 2))))
-    (when (looking-at "\\s-+") (goto-char (line-end-position)))))
-
-(defvar flub-mode-syntax-table
-  (let ((table asm-mode-syntax-table))
-    (modify-syntax-entry table ?! "!")
-    (modify-syntax-entry table ?< "!")))
-
-(define-derived-mode flub-mode asm-mode "f9k"
-  "Major mode for editing Fluke 9000 source"
+;;;###autoload
+(define-derived-mode 9lc-mode prog-mode "9LC"
+  "Major mode for editing Fluke 9000 source."
   (setq tab-width 2)
   (setq tab-stop-list '(2 0))
-  (setq indent-line-function 'flub-indent-line)
+  (setq indent-line-function #'9lc-mode-indent)
   (setq tab-always-indent t)
 
-  (set-syntax-table flub-mode-syntax-table)
-  (setq asm-comment-char ?!)
+  (set-syntax-table 9lc-mode-syntax-table)
   (setq comment-use-syntax t)
   (setq fill-prefix nil)
 
   (set (make-local-variable 'font-lock-defaults)
-       '(flub-mode-font-lock-keywords nil t)))
+       '(9lc-mode-font-lock-keywords nil t)))
 
-(provide 'flub-mode)
-;;; flub-mode.el ends here
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             (cons "\\.9lc\\'" '9lc-mode))
+
+(provide '9lc-mode)
+;;; 9lc-mode.el ends here
