@@ -1,4 +1,4 @@
-;;; 9lc-mode.el --- Major mode for editing Fluke 9000 source
+;;; 9lc-mode.el --- Major mode for editing Fluke 9000 scripts
 
 ;; Copyright (C) 2014, 2015, 2016, 2018  Ian Eure
 
