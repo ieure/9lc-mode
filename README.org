@@ -1,0 +1,7 @@
+* 9LC Mode for Emacs
+
+  This is a major mode for editing [[http://arcarc.xmission.com/Test%2520Equipment/Fluke/9100%2520Fixture/9100%2520Programmer.pdf][Fluke 9010a]] "9LC" source code.
+  This is a scripting language used to control Fluke’s 9000 series of
+  microsystem troubleshooters.
+
+  Please report any issues with the GitHub issue tracker.
