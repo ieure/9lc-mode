@@ -4,6 +4,7 @@
 
 ;; Author: Ian Eure <ian.eure@gmail.com>
 ;; Version: 0.6
+;; URL: https://github.com/ieure/9lc-mode
 ;; Keywords: extensions, languages
 
 ;; This program is free software; you can redistribute it and/or modify
