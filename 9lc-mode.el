@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014, 2015, 2016, 2018  Ian Eure
 
 ;; Author: Ian Eure <ian.eure@gmail.com>
-;; Version: 0.6
+;; Version: 0.7
 ;; URL: https://github.com/ieure/9lc-mode
 ;; Keywords: extensions, languages
 
