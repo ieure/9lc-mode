@@ -166,7 +166,7 @@
 ;; All other statements are indented one level.
 
 (defun 9lc-mode-indent ()
-  "Indent the current line"
+  "Indent the current line."
   (interactive)
   (indent-line-to
    (save-excursion
