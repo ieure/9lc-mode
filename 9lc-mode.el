@@ -159,6 +159,10 @@
     (modify-syntax-entry ?\n ">" table)
     table))
 
+(defun 9lc-mode--line-blankp ()
+  "Is this line blank?"
+  (re-search-forward "^\\s-*$" (line-end-position) t))
+
 ;; Indentation rules:
 ;;
 ;; INCLUDE, SETUP, PROGRAM, and labels are all aligned to 0.
@@ -167,12 +171,16 @@
 (defun 9lc-mode-indent ()
   "Indent the current line."
   (interactive)
-  (indent-line-to
-   (save-excursion
-     (goto-char (line-beginning-position))
-     (if (looking-at "^\\s-*\\(program\\|setup\\|declarations\\|address space information\\|include\\|[a-z0-9]+:\\|!\\)")
-         0
-       tab-width))))
+  (save-excursion
+    (indent-line-to
+     (save-match-data
+      (goto-char (line-beginning-position))
+      (if (looking-at "^\\s-*\\(program\\|setup\\|declarations\\|address space information\\|include\\|[a-z0-9]+:\\|!\\)")
+          0
+        tab-width))))
+
+  (when (9lc-mode--line-blankp)
+    (goto-char (line-end-position))))
 
 ;;;###autoload
 (define-derived-mode 9lc-mode prog-mode "9LC"
