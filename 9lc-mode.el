@@ -125,8 +125,7 @@
   "9LC language keywords.")
 
 (defconst 9lc-mode-font-lock-keywords
-  `(
-    ("\\bREG\\s-*[A-F0-9]\\b" . font-lock-variable-name-face)
+  `(("\\bREG\\s-*[A-F0-9]\\b" . font-lock-variable-name-face)
 
     ("\\b\\(yes\\|no\\)\\b" . font-lock-constant-face)
     ("@" . font-lock-constant-face)
